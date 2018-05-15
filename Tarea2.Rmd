@@ -34,6 +34,8 @@ metadat <- read.csv("metadata_emision.csv", header = TRUE)
 
 colnames(dat)[1] <- "AÑO"
 
+
+
 dato_emision<- gather(dat, key = fuente, value = emision, -AÑO)
 ``` 
 
@@ -41,7 +43,8 @@ Los datos fueron reestructurados para simplificar  la exploración, de la siguen
 
 ```{r, message=FALSE, warning=FALSE, results='asis', echo=TRUE, eval=FALSE}
 library(tidyverse)
-dato_emision<- gather(dat, key = fuente, value = emisión, -AÑO)
+dato_emision<- gather(dat, key = fuente, value = emision, -AÑO)
+
 ```
 
 Con estos datos responda las sigueintes preguntas:
@@ -50,8 +53,10 @@ Con estos datos responda las sigueintes preguntas:
  
 ```{r}
 library(dplyr)
+#filtro los elementos que no preciso que esten en la base de datos (totales y subtotales)
+dato_emision <- filter(dato_emision ,fuente != 'TOTAL' & fuente != 'S_C' & fuente != 'I_E')
 
-emisionmax <- filter(dato_emision,emision==max(emision,na.rm=TRUE) & fuente !="TOTAL")
+emisionmax <- filter(dato_emision,emision==max(emision,na.rm=TRUE))
 emisionmax
 ```
 La emisión maxima de CO2 ocurre a través de la Quema de Biomasa.
@@ -80,12 +85,14 @@ Las etiquetas de los ejes deben ser claras y describir las variables involucrada
 ```{r}
 library(ggplot2)
 
-dato_emision %>% filter(fuente==c("S_C","Q_B","T","I_E","BI")) %>% filter(!is.na(emision)) %>% ggplot(aes(x=AÑO, y=emision)) + geom_point() + geom_line() + facet_wrap(~fuente) + labs(x="Años", "y= Emisión de CO2", caption= "Observamos un aumento de emisión de CO2 en 4 de las 5 fuentes con mayor emisión media." )
+dato_emision %>% filter(fuente==c("CE_SP","Q_B","T","I","BI")) %>% filter(!is.na(emision)) %>% ggplot(aes(x=AÑO, y=emision)) + geom_point() + geom_line() + facet_wrap(~fuente) + labs(x="Años", "y= Emisión de CO2", caption= "Observamos un aumento de emisión de CO2 en 4 de las 5 fuentes con mayor emisión media." )
 ```
 
 5. Relplique el siguiente gráfico usando ggplot2.
 ```{r}
-dato_emision %>% filter(fuente==c("S_C","Q_B","T","BI","I_E")) %>% filter(!is.na(emision)) %>% ggplot(aes(x=fct_reorder(fuente,emision, fun=median, .desc=TRUE), y=emision)) + geom_boxplot() + labs(x="Fuentes con mayor emisión media entre 1990−2016", y= "Emisión de CO2 en Gg")
+dato_emision %>% filter(fuente==c("CE_SP","Q_B","T","I","BI")) %>% filter(!is.na(emision)) %>% ggplot(aes(x=fct_reorder(fuente,emision, fun=median, .desc=TRUE), y=emision)) + geom_boxplot() + geom_line() +labs(x="Fuentes con mayor emisión media entre 1990−2016", y= "Emisión de CO2 en Gg")
+
+
 ```
 
 6. Usando la librería ggplot2 y ggpmisc replique el siguiente gráfico de las emisiones totales entre 1990 y 2016.
@@ -94,6 +101,7 @@ Use `library(help = ggpmisc)` para ver todas las funciones de la librería ggpmi
 
 ```{r}
 library(ggpmisc)
+dato_emision<- gather(dat, key = fuente, value = emision, -AÑO)
 dato_emision %>% filter(fuente==c("TOTAL")) %>% filter(!is.na(emision))%>% ggplot(aes(x=AÑO, y=emision)) + geom_line() + geom_point() +labs(x="Año", y= "Emisión de CO2 en Gg") + stat_peaks(colour="red") + stat_peaks(geom="text",colour="red",vjust=-0.5,x.label.fmt =)
 ```
 
@@ -116,4 +124,109 @@ Recuerde que en las visualizaciones, las etiquetas de los ejes deben ser claras 
 
 gastos <- read.csv("gastosmed.csv", header = TRUE, dec = ",") 
 
+```
+Trabajaremos con la base de datos "gastos", la cual contiene 23811 observaciones de 9 variables.
+Tenemos variables categóricas y numéricas. Las variables numéricas son el numero de identificación de cada paciente, la edad en años y el importe. Por otro lado las variables categóricas son: el sexo, departamento de residencia, el tipo de servicio que se presta  y el nombre,tipo y departamento del instituto que realiza la prestación.
+
+
+
+Que tipo de variación ocurre al interior de mis variables?
+```{r}
+gastos %>%
+ggplot(aes(x = fct_infreq(Sexo))) + geom_bar()+ labs(y = "Frecuencia", x = "Sexo",title="Sexo de los pacientes que solicitan servicios",caption="Las mujeres necesitaron mas prestamo de servicios que los hombres")
+
+```
+
+
+```{r}
+gastos %>%
+ggplot(aes(x = fct_infreq(Prestacion))) + geom_bar() +
+ theme(axis.text.x = element_text(angle = 90)) +
+ coord_flip() + labs(y = "Frecuencia", x = "Servicios", caption="El servicio mas solicitado es el cateterismo izq. en adultos.",title= "Distribución de los servicios prestados" )
+```
+
+
+```{r}
+gastos %>%
+ggplot(aes(x = fct_infreq(Departamento_residencia),color=Sexo,fill=Sexo)) + geom_bar() +
+ theme(axis.text.x = element_text(angle = 90)) +
+ coord_flip() + labs(y = "Frecuencia", x = "Departamento",title="Departamento de residencia de pacientes separados según sexo" )
+```
+
+```{r}
+gastos %>%
+ggplot(aes(x = fct_infreq(Prestador_departamento),fill=Prestador_tipo)) + geom_bar() +
+ theme(axis.text.x = element_text(angle = 90)) +
+ coord_flip() + labs(y = "Frecuencia", x = "Departamento",title="Departamento de los institutos que prestan servicios según el tipo de institución", caption= "Los seguros privados prestan servicios sólo en la capital del país" ) 
+
+
+```
+
+
+```{r}
+gastos%>% ggplot(aes(x = Edad_aÃ.os, fill=Sexo)) +
+ geom_histogram(bins=15) +
+ labs(x = "Edad en años", y = "Frecuencia", title= "Edad en años de los pacientes que solicitan servicios", caption="Era de esperarse que las personas mayores de 60 años sean las que mas solicitan prestación de servicios de salud, con respecto al sexo no se observan grandes diferencias.")
+
+```
+```{r}
+gastos %>% ggplot(aes(x = Importe)) +
+ geom_histogram(bins=150) +
+ labs(x = "Importe", y = "Frecuencia", title= "Importe de los servicios prestados",caption= "Se observa claramente que si bien hay servicios cuyos costos son muy altos, los más populares son los que tienen menos costos.")
+
+
+```
+Vimos en el plot anterior como se distribuyen los Importes de los servicios, la mayoria de los servicios tienen importes bajos, pero hay servicios que son muy costosos, habrá diferencia de costos segun el sexo?
+```{r}
+gastos %>% mutate(sexo_2= as.factor(Sexo)) %>%
+ ggplot(aes(x = Importe, color = sexo_2) ) + geom_freqpoly(bins=13) + labs(caption="Servicios con costos muy elevados son realizados en mujeres")
+
+#Tambien lo podemos visualizar con un boxplot
+
+library(productplots)
+gastos %>%
+ ggplot(aes(x = Sexo, y= Importe)) +
+ geom_boxplot() +
+ theme(axis.text.x = element_text(angle = 90))
+
+
+
+```
+```{r}
+gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Sexo)) + geom_point() + labs(caption="Como esperabamos a partir del plot anterior, los servicios mas caros son en su mayoria realizados en mujeres.") 
+```
+
+
+
+
+
+
+ Y según la edad ??
+ 
+```{r}
+group_by(gastos,Edad_aÃ.os) %>%summarise(suma=sum(Importe)) %>% ggplot(aes(Edad_aÃ.os,suma))+geom_col()+labs(x="Edad", y="Total de gastos en tratamientos", title="Total de gastos en tratamiento según edad del paciente")
+```
+
+
+
+Cuáles son los servicios mas costosos? Son para algun rango etario en particular?
+
+```{r}
+gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Edad_aÃ.os)) + geom_point() + label(title="Prestaciones más costosas con sus respectivos rangos de edad", caption="El costo de los servicios no depende de la edad del paciente")
+```
+y en que tipo de instituciones se realizan los servicios mas costosos? 
+
+
+```{r}
+levels(gastos$Prestador_tipo)
+gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Prestador_tipo)) + geom_point() +label(caption="Observamos que los servicios más costosos no se prestan a traves de seguros privados.")
+```
+Supongamos que nos interesa trabajar solo con un sector de edad, los niños.
+
+Como se disribuyen los costos para los niños? 
+
+```{r}
+gastos %>% filter(Edad_aÃ.os<12) %>%group_by(Edad_aÃ.os) %>% summarise(Importe_n=sum(Importe)) %>% ggplot(aes(x=Edad_aÃ.os,y=Importe_n))+ geom_line() + labs(x="Edad",y="Costos totales",caption="El comportamiento se puede explica por los riesgos de los pacientes mientras son bebés.")
+
+  
 ```
