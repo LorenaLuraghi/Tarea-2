@@ -34,9 +34,6 @@ metadat <- read.csv("metadata_emision.csv", header = TRUE)
 
 colnames(dat)[1] <- "AÑO"
 
-
-
-dato_emision<- gather(dat, key = fuente, value = emision, -AÑO)
 ``` 
 
 Los datos fueron reestructurados para simplificar  la exploración, de la siguente manera:
@@ -52,6 +49,9 @@ Con estos datos responda las sigueintes preguntas:
  1. Usando las funciones de la librería `dplyr` obtenga qué fuentes tienen la emisión máxima. Recuerde que TOTAL debería ser excluído para esta respuesta.
  
 ```{r}
+library(tidyverse)
+dato_emision<- gather(dat, key = fuente, value = emision, -AÑO)
+
 library(dplyr)
 #filtro los elementos que no preciso que esten en la base de datos (totales y subtotales)
 dato_emision <- filter(dato_emision ,fuente != 'TOTAL' & fuente != 'S_C' & fuente != 'I_E')
@@ -212,14 +212,14 @@ group_by(gastos,Edad_aÃ.os) %>%summarise(suma=sum(Importe)) %>% ggplot(aes(Edad
 Cuáles son los servicios mas costosos? Son para algun rango etario en particular?
 
 ```{r}
-gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Edad_aÃ.os)) + geom_point() + label(title="Prestaciones más costosas con sus respectivos rangos de edad", caption="El costo de los servicios no depende de la edad del paciente")
+gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Edad_aÃ.os)) + geom_point() + labs(title="Prestaciones más costosas con sus respectivos rangos de edad", caption="El costo de los servicios no depende de la edad del paciente")
 ```
 y en que tipo de instituciones se realizan los servicios mas costosos? 
 
 
 ```{r}
 levels(gastos$Prestador_tipo)
-gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Prestador_tipo)) + geom_point() +label(caption="Observamos que los servicios más costosos no se prestan a traves de seguros privados.")
+gastos %>%  filter (Importe >2e+06)  %>% ggplot(aes(x =Importe,y=Prestacion,color=Prestador_tipo)) + geom_point() +labs(caption="Observamos que los servicios más costosos no se prestan a traves de seguros privados.")
 ```
 Supongamos que nos interesa trabajar solo con un sector de edad, los niños.
 
